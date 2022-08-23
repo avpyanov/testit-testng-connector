@@ -31,7 +31,7 @@ public class AllureResultsMapper {
     public AutotestResults mapToTestItResults(AllureResultsContainer allureResultsContainer) {
         final AutotestResults testItAutotest = new AutotestResults();
 
-        testItAutotest.setOutcome(StringUtils.capitalize(allureResultsContainer.getStatus()));
+        testItAutotest.setOutcome(allureResultsContainer.getStatus());
         testItAutotest.setStartedOn(convertTimestampToDate(allureResultsContainer.getStart()));
         testItAutotest.setCompletedOn(convertTimestampToDate(allureResultsContainer.getStop()));
 
