@@ -57,7 +57,12 @@ public class UploadTestResultsToTestIt extends TestListenerAdapter {
                     }
                 }
             }
-            testItApi.getTestRunsClient().setAutoTestsResults(testItSettings.testRunId(), autotestResultsList);
+            try {
+                testItApi.getTestRunsClient().setAutoTestsResults(testItSettings.testRunId(), autotestResultsList);
+            } catch (RuntimeException e) {
+                logger.error("Не удалось загрузить результаты тест-рана: {}", e.getMessage());
+            }
+
         }
     }
 
