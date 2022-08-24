@@ -22,10 +22,12 @@ public class GetTestIdsFromTestRun implements IMethodInterceptor {
     public List<IMethodInstance> intercept(List<IMethodInstance> list, ITestContext iTestContext) {
         final List<IMethodInstance> result = new ArrayList<>();
         final List<String> testIdList = getAutotestIdsFromTestRun();
-        for (IMethodInstance iMethodInstance : list) {
-            String testId = getTestId(iMethodInstance);
-            if (testIdList.contains(testId)) {
-                result.add(iMethodInstance);
+        if (!testIdList.isEmpty()){
+            for (IMethodInstance iMethodInstance : list) {
+                String testId = getTestId(iMethodInstance);
+                if (testIdList.contains(testId)) {
+                    result.add(iMethodInstance);
+                }
             }
         }
         return result;
@@ -37,12 +39,15 @@ public class GetTestIdsFromTestRun implements IMethodInterceptor {
         final TestItApi testItApi = new TestItApi(testItSettings.endpoint(), testItSettings.token());
         final String testRunId = testItSettings.testRunId();
         logger.info("Получение тестов для testRunId:{}", testRunId);
-
-        List<TestResult> results = testItApi.getTestRunsClient().getTestRun(testRunId).getTestResults();
-        for (TestResult result : results) {
-            testIds.add(result.getAutoTest().getGlobalId());
+        try {
+            List<TestResult> results = testItApi.getTestRunsClient().getTestRun(testRunId).getTestResults();
+            for (TestResult result : results) {
+                testIds.add(result.getAutoTest().getGlobalId());
+            }
+            logger.info("Тесты для запуска: {}", testIds);
+        } catch (Exception e) {
+            logger.error("Ошибка при получении списка тестов {}", e.getMessage());
         }
-        logger.info("Тесты для запуска: {}", testIds);
         return testIds;
     }
 
