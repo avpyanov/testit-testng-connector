@@ -34,7 +34,7 @@ public class AllureResultsMapper {
     public AutotestResults mapToTestItResults(AllureResultsContainer allureResultsContainer) {
         final AutotestResults testItAutotest = new AutotestResults();
 
-        testItAutotest.setOutcome(StringUtils.capitalize(allureResultsContainer.getStatus()));
+        testItAutotest.setOutcome(setTestStatus(allureResultsContainer.getStatus()));
         testItAutotest.setStartedOn(convertTimestampToDate(allureResultsContainer.getStart()));
         testItAutotest.setCompletedOn(convertTimestampToDate(allureResultsContainer.getStop()));
 
@@ -50,7 +50,7 @@ public class AllureResultsMapper {
         for (AllureResultsStep flattenAllureStep : flattenAllureSteps) {
             AutotestResultsStep autotestResultsStep = new AutotestResultsStep();
             autotestResultsStep.setTitle(flattenAllureStep.getName());
-            autotestResultsStep.setOutcome(StringUtils.capitalize(flattenAllureStep.getStatus()));
+            autotestResultsStep.setOutcome(setTestStatus(flattenAllureStep.getStatus()));
             autotestResultsStep.setStartedOn(convertTimestampToDate(flattenAllureStep.getStart()));
             autotestResultsStep.setCompletedOn(convertTimestampToDate(flattenAllureStep.getStop()));
 
@@ -100,5 +100,11 @@ public class AllureResultsMapper {
             }
         }
         return flattenSteps;
+    }
+
+    private String setTestStatus(String reportStatus) {
+        if (reportStatus.equals("broken")) {
+            return "Failed";
+        } else return StringUtils.capitalize(reportStatus);
     }
 }
