@@ -18,4 +18,5 @@ public class AllureResultsContainer {
     private List<Parameter> parameters;
     private Long start;
     private Long stop;
+    private List<AllureAttachment> attachments;
 }
