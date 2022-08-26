@@ -30,7 +30,10 @@ public class UploadTestResultsToTestIt extends TestListenerAdapter {
     @Override
     public void onFinish(ITestContext context) {
         final String allureResultsDirectory = "target/allure-results";
-        String configurationId = testItApi.getTestRunsClient().getTestRun(testItSettings.testRunId()).getTestResults().get(0).getConfigurationId();
+        String configurationId = testItApi.getTestRunsClient().getTestRun(testItSettings.testRunId())
+                .getTestResults()
+                .get(0)
+                .getConfigurationId();
 
         File[] files = new File(allureResultsDirectory).listFiles();
         if (files == null) {
@@ -58,6 +61,7 @@ public class UploadTestResultsToTestIt extends TestListenerAdapter {
                 }
             }
             try {
+                logger.info("Загрузка результатов тест-рана {}", autotestResultsList);
                 testItApi.getTestRunsClient().setAutoTestsResults(testItSettings.testRunId(), autotestResultsList);
             } catch (RuntimeException e) {
                 logger.error("Не удалось загрузить результаты тест-рана: {}", e.getMessage());

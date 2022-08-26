@@ -44,6 +44,11 @@ public class AllureResultsMapper {
             testItAutotest.setTraces(allureResultsContainer.getStatusDetails().getTrace());
         }
 
+        if (!allureResultsContainer.getAttachments().isEmpty()) {
+            List<Attachment> attachments = uploadAttachments(allureResultsContainer.getAttachments(), allureResultsDirectoryPattern, testItApi);
+            testItAutotest.setAttachments(attachments);
+        }
+
         List<AutotestResultsStep> autotestResultsSteps = new ArrayList<>();
         List<AllureResultsStep> flattenAllureSteps = flattenSteps(allureResultsContainer.getSteps());
 
@@ -65,17 +70,7 @@ public class AllureResultsMapper {
             }
 
             if (!flattenAllureStep.getAttachments().isEmpty()) {
-                List<Attachment> testItAttachments = new ArrayList<>();
-                for (AllureAttachment attachment : flattenAllureStep.getAttachments()) {
-                    String filePath = String.format(allureResultsDirectoryPattern, attachment.getSource());
-
-                    try {
-                        Attachment testItAttachment = testItApi.getAttachmentsClient().createAttachment(new File(filePath));
-                        testItAttachments.add(testItAttachment);
-                    } catch (RuntimeException e) {
-                        logger.error("Не удалось загрузить вложение {}", filePath);
-                    }
-                }
+                List<Attachment> testItAttachments = uploadAttachments(flattenAllureStep.getAttachments(), allureResultsDirectoryPattern, testItApi);
                 autotestResultsStep.setAttachments(testItAttachments);
             }
 
@@ -106,5 +101,21 @@ public class AllureResultsMapper {
         if (reportStatus.equals("broken")) {
             return "Failed";
         } else return StringUtils.capitalize(reportStatus);
+    }
+
+    private List<Attachment> uploadAttachments(List<AllureAttachment> allureAttachmentList,
+                                               String allureResultsDirectoryPattern,
+                                               TestItApi testItApi) {
+        List<Attachment> attachments = new ArrayList<>();
+        for (AllureAttachment attachment : allureAttachmentList) {
+            String filePath = String.format(allureResultsDirectoryPattern, attachment.getSource());
+            try {
+                Attachment testItAttachment = testItApi.getAttachmentsClient().createAttachment(new File(filePath));
+                attachments.add(testItAttachment);
+            } catch (Exception e) {
+                logger.error("Не удалось загрузить вложения {}", filePath);
+            }
+        }
+        return attachments;
     }
 }
