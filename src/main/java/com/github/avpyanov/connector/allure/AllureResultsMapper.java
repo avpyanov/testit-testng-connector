@@ -8,17 +8,18 @@ import com.github.avpyanov.testit.client.TestItApi;
 import com.github.avpyanov.testit.client.dto.Attachment;
 import com.github.avpyanov.testit.client.dto.AutotestResults;
 import com.github.avpyanov.testit.client.dto.AutotestResultsStep;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.github.avpyanov.connector.allure.AllureUtils.convertTimestampToDate;
+import static com.github.avpyanov.connector.allure.AllureUtils.setTestStatus;
 
 public class AllureResultsMapper {
 
@@ -34,19 +35,18 @@ public class AllureResultsMapper {
     public AutotestResults mapToTestItResults(AllureResultsContainer allureResultsContainer) {
         final AutotestResults testItAutotest = new AutotestResults();
 
-        testItAutotest.setOutcome(setTestStatus(allureResultsContainer.getStatus()));
-        testItAutotest.setStartedOn(convertTimestampToDate(allureResultsContainer.getStart()));
-        testItAutotest.setCompletedOn(convertTimestampToDate(allureResultsContainer.getStop()));
-
+        testItAutotest.outcome(setTestStatus(allureResultsContainer.getStatus()));
+        testItAutotest.startedOn(convertTimestampToDate(allureResultsContainer.getStart()));
+        testItAutotest.completedOn(convertTimestampToDate(allureResultsContainer.getStop()));
 
         if (!allureResultsContainer.getStatus().equals("Passed")) {
-            testItAutotest.setMessage(allureResultsContainer.getStatusDetails().getMessage());
-            testItAutotest.setTraces(allureResultsContainer.getStatusDetails().getTrace());
+            testItAutotest.message(allureResultsContainer.getStatusDetails().getMessage());
+            testItAutotest.traces(allureResultsContainer.getStatusDetails().getTrace());
         }
 
         if (!allureResultsContainer.getAttachments().isEmpty()) {
             List<Attachment> attachments = uploadAttachments(allureResultsContainer.getAttachments(), allureResultsDirectoryPattern, testItApi);
-            testItAutotest.setAttachments(attachments);
+            testItAutotest.attachments(attachments);
         }
 
         List<AutotestResultsStep> autotestResultsSteps = new ArrayList<>();
@@ -76,12 +76,8 @@ public class AllureResultsMapper {
 
             autotestResultsSteps.add(autotestResultsStep);
         }
-        testItAutotest.setStepResults(autotestResultsSteps);
+        testItAutotest.stepResults(autotestResultsSteps);
         return testItAutotest;
-    }
-
-    private String convertTimestampToDate(Long timestamp) {
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(timestamp);
     }
 
     private List<AllureResultsStep> flattenSteps(final List<AllureResultsStep> steps) {
@@ -97,12 +93,6 @@ public class AllureResultsMapper {
         return flattenSteps;
     }
 
-    private String setTestStatus(String reportStatus) {
-        if (reportStatus.equals("broken")) {
-            return "Failed";
-        } else return StringUtils.capitalize(reportStatus);
-    }
-
     private List<Attachment> uploadAttachments(List<AllureAttachment> allureAttachmentList,
                                                String allureResultsDirectoryPattern,
                                                TestItApi testItApi) {
@@ -113,7 +103,7 @@ public class AllureResultsMapper {
                 Attachment testItAttachment = testItApi.getAttachmentsClient().createAttachment(new File(filePath));
                 attachments.add(testItAttachment);
             } catch (Exception e) {
-                logger.error("Не удалось загрузить вложения {}", filePath);
+                logger.error("Не удалось загрузить вложения {} {}", filePath, e);
             }
         }
         return attachments;
